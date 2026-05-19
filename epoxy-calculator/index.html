@@ -640,12 +640,19 @@ function renderList(){
     const coats = item.coats||1;
     const perCoat = getUnitsPerCoat(item, effectiveArea);
     // Coats row — always visible, prominent
+    const kitsDisplay = item.manualKits !== undefined ? item.manualKits : units;
+    const autoKits = getAutoKits(item, effectiveArea);
+    const isOverride = item.manualKits !== undefined && item.manualKits !== autoKits;
     const coatsRow = `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding:6px 10px;background:var(--bg);border-radius:6px;border:1px solid var(--border2)">
-        <span style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.5px">🖌 COATS</span>
+        <div style="display:flex;flex-direction:column">
+          <span style="font-size:10px;color:var(--text3);font-weight:700;letter-spacing:.5px">📦 KITS</span>
+          ${isOverride ? '<span style="font-size:9px;color:var(--orange)">auto: '+autoKits+'</span>' : ''}
+        </div>
         <div style="display:flex;align-items:center;gap:6px">
-          <button class="qty-btn" style="width:26px;height:26px;font-size:14px" onclick="adjustCoats('${id}',-1)">−</button>
-          <span style="font-size:15px;font-weight:900;color:var(--orange);min-width:20px;text-align:center">${coats}</span>
-          <button class="qty-btn" style="width:26px;height:26px;font-size:14px" onclick="adjustCoats('${id}',1)">+</button>
+          <button class="qty-btn" style="width:26px;height:26px;font-size:14px" onclick="adjustKits('${id}',-1)">−</button>
+          <span style="font-size:17px;font-weight:900;color:var(--orange);min-width:28px;text-align:center">${kitsDisplay}</span>
+          <button class="qty-btn" style="width:26px;height:26px;font-size:14px" onclick="adjustKits('${id}',1)">+</button>
+          ${isOverride ? '<button onclick="resetKits('${id}')" style="font-size:9px;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:2px 5px;cursor:pointer">↺</button>' : ''}
         </div>
       </div>`;
     if(hasCov && areaSet){
@@ -704,9 +711,15 @@ function adjustQty(id, delta){
   myList[id].qty = Math.max(1,(myList[id].qty||1)+delta);
   renderList(); recalc();
 }
-function adjustCoats(id, delta){
+function adjustKits(id, delta){
   if(!myList[id]) return;
-  myList[id].coats = Math.max(1,(myList[id].coats||1)+delta);
+  const item = myList[id];
+  const effectiveArea = parseFloat(document.getElementById('areaInput')?.value||0) * (item.wastage||1);
+  // Seed manualKits from auto-calc if not yet set
+  if(item.manualKits === undefined){
+    item.manualKits = getUnitsNeeded(item, effectiveArea);
+  }
+  item.manualKits = Math.max(1, item.manualKits + delta);
   renderList(); recalc();
 }
 function removeItem(id){ delete myList[id]; renderBrowser(); renderList(); recalc(); }
@@ -722,10 +735,16 @@ function getCalcParams(){
   return {area, wastage, markup, effectiveArea};
 }
 function getUnitsNeeded(item, effectiveArea){
+  if(item.manualKits !== undefined) return item.manualKits;
   const coats = item.coats || 1;
   if(item.cov > 0 && effectiveArea > 0){
     return Math.ceil(effectiveArea / item.cov) * coats;
   }
+  return (item.qty || 1) * coats;
+}
+function getAutoKits(item, effectiveArea){
+  const coats = item.coats || 1;
+  if(item.cov > 0 && effectiveArea > 0) return Math.ceil(effectiveArea / item.cov) * coats;
   return (item.qty || 1) * coats;
 }
 function getUnitsPerCoat(item, effectiveArea){
@@ -788,7 +807,7 @@ function buildOrder(){
     items.forEach(item=>{
       lines.push('  '+item.name);
       if(item.code) lines.push('    Code: '+item.code);
-      const coatNote = (item.coats||1)>1 ? ' ('+getUnitsPerCoat(item,effectiveArea)+' × '+(item.coats||1)+' coats)' : '';
+      const coatNote = '';
       lines.push('    Qty:  '+item.units+' \u00d7 '+(item.unit||'unit')+coatNote);
       if(item.lineCost>0) lines.push('    Est:  $'+item.lineCost.toFixed(2)+' ex GST');
       else lines.push('    Est:  Price TBC');
@@ -945,6 +964,12 @@ function sendViaWhatsApp(){
   const body = buildEmailBody();
   const encoded = encodeURIComponent(body);
   window.open('https://wa.me/?text=' + encoded, '_blank');
+}
+
+function resetKits(id){
+  if(!myList[id]) return;
+  delete myList[id].manualKits;
+  renderList(); recalc();
 }
 </script>
 </body>
