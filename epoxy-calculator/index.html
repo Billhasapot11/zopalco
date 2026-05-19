@@ -602,23 +602,30 @@ function renderList(){
     const hasCov = item.cov > 0;
     const areaSet = effectiveArea > 0;
     let unitsHtml;
+    const coats = item.coats||1;
+    const perCoat = getUnitsPerCoat(item, effectiveArea);
+    const coatsStepper = `<div class="list-qty" style="margin-top:5px;justify-content:flex-end;gap:4px">
+        <span style="font-size:9px;color:var(--text4);margin-right:2px">COATS</span>
+        <button class="qty-btn" onclick="adjustCoats('${id}',-1)">−</button>
+        <span class="qty-val">${coats}</span>
+        <button class="qty-btn" onclick="adjustCoats('${id}',1)">+</button>
+      </div>`;
     if(hasCov && areaSet){
-      unitsHtml = `<div class="li-sub">📦 <strong style="color:var(--text)">${units}</strong> × ${item.unit||'unit'} needed</div>
-        <div class="li-sub" style="font-size:9px;margin-top:2px">${item.cov} m²/unit · ${effectiveArea.toFixed(0)} m² effective</div>`;
+      const breakdown = coats>1 ? ` (${perCoat} × ${coats} coats)` : '';
+      unitsHtml = `<div class="li-sub">📦 <strong style="color:var(--text)">${units}</strong> × ${item.unit||'unit'}${breakdown}</div>
+        <div class="li-sub" style="font-size:9px;margin-top:1px">${item.cov} m²/unit · ${effectiveArea.toFixed(0)} m² eff.</div>
+        ${coatsStepper}`;
     } else if(hasCov && !areaSet){
-      unitsHtml = `<div class="li-sub" style="color:var(--orange)">⚠️ Enter area above to calculate kits</div>
-        <div class="list-qty" style="margin-top:6px;justify-content:flex-end">
-          <button class="qty-btn" onclick="adjustQty('${id}',-1)">−</button>
-          <span class="qty-val">${item.qty||1}</span>
-          <button class="qty-btn" onclick="adjustQty('${id}',1)">+</button>
-        </div>`;
+      unitsHtml = `<div class="li-sub" style="color:var(--orange)">⚠️ Enter area above</div>
+        ${coatsStepper}`;
     } else {
       unitsHtml = `<div class="li-sub">Manual qty</div>
-        <div class="list-qty" style="margin-top:6px;justify-content:flex-end">
+        <div class="list-qty" style="margin-top:5px;justify-content:flex-end">
           <button class="qty-btn" onclick="adjustQty('${id}',-1)">−</button>
           <span class="qty-val">${item.qty||1}</span>
           <button class="qty-btn" onclick="adjustQty('${id}',1)">+</button>
-        </div>`;
+        </div>
+        ${coatsStepper}`;
     }
     h+=`<div class="list-item">
       <div class="li-info">
@@ -647,6 +654,11 @@ function adjustQty(id, delta){
   myList[id].qty = Math.max(1,(myList[id].qty||1)+delta);
   renderList(); recalc();
 }
+function adjustCoats(id, delta){
+  if(!myList[id]) return;
+  myList[id].coats = Math.max(1,(myList[id].coats||1)+delta);
+  renderList(); recalc();
+}
 function removeItem(id){ delete myList[id]; renderBrowser(); renderList(); recalc(); }
 function clearList(){ myList={}; renderBrowser(); renderList(); recalc(); }
 
@@ -660,10 +672,15 @@ function getCalcParams(){
   return {area, wastage, markup, effectiveArea};
 }
 function getUnitsNeeded(item, effectiveArea){
-  // If coverage is set, calculate from area. Otherwise use manual qty.
-  return item.cov > 0 && effectiveArea > 0
-    ? Math.ceil(effectiveArea / item.cov)
-    : (item.qty || 1);
+  const coats = item.coats || 1;
+  if(item.cov > 0 && effectiveArea > 0){
+    return Math.ceil(effectiveArea / item.cov) * coats;
+  }
+  return (item.qty || 1) * coats;
+}
+function getUnitsPerCoat(item, effectiveArea){
+  if(item.cov > 0 && effectiveArea > 0) return Math.ceil(effectiveArea / item.cov);
+  return item.qty || 1;
 }
 
 function recalcAndRender(){
@@ -721,7 +738,8 @@ function buildOrder(){
     items.forEach(item=>{
       lines.push('  '+item.name);
       if(item.code) lines.push('    Code: '+item.code);
-      lines.push('    Qty:  '+item.units+' \u00d7 '+(item.unit||'unit'));
+      const coatNote = (item.coats||1)>1 ? ' ('+getUnitsPerCoat(item,effectiveArea)+' × '+(item.coats||1)+' coats)' : '';
+      lines.push('    Qty:  '+item.units+' \u00d7 '+(item.unit||'unit')+coatNote);
       if(item.lineCost>0) lines.push('    Est:  $'+item.lineCost.toFixed(2)+' ex GST');
       else lines.push('    Est:  Price TBC');
     });
