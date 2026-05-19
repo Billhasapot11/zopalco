@@ -398,36 +398,31 @@ const DEFAULT_SECTIONS = [
   {
     id:'sika', cls:'sika', icon:'🟢', name:'Sika Australia', tag:'BR Construction Supplies — Torrensville SA',
     subcats:[
-      { label:'Primers & Moisture Barriers', products:[
-        {id:'sf94a',  name:'Sikafloor®-94 Part A',          desc:'2-part EP primer — Part A',                      code:'875943', price:344.8,      unit:'20L pack',      cov:160.0},
-        {id:'sf94b',  name:'Sikafloor®-94 Part B',          desc:'2-part EP primer — Part B',                      code:'877510', price:367.0,      unit:'20L pack',       cov:300.0},
-        {id:'sf161a', name:'Sikafloor®-161 Part A',         desc:'Epoxy primer & DPM — Part A',                    code:'879638', price:221.0,      unit:'13.09kg pack',      cov:32.0},
-        {id:'sf161b', name:'Sikafloor®-160/161/264 Part B',   desc:'Hardener for SF-160, SF-161 & SF-264',                 code:'880020', price:93.0,      unit:'4kg pack',       cov:32.0},
-        {id:'sf160',  name:'Sikafloor®-160',                desc:'2-part epoxy primer & levelling mortar',          code:'',       price:0,      unit:'kit',      cov:5},
-        {id:'sf158',  name:'Sikafloor®-158 W Fast Barrier', desc:'Rapid-drying hydrostatic moisture barrier',       code:'',       price:0,      unit:'kit',      cov:6},
+      { label:'Sikafloor®-161 — Epoxy Primer (Kit = Part A + Part B)', products:[
+        {id:'sf161a', name:'Sikafloor®-161 Part A',         desc:'Epoxy primer Part A — 13.09kg. Covers 32m²/kit with Part B. Code: 879638',  code:'879638', price:221.0, unit:'13.09kg pack', cov:32.0},
+        {id:'sf161b', name:'Sikafloor®-161 Part B (Hardener)', desc:'Hardener for SF-161, SF-160 & SF-264 — 4kg pack. 1 Part B per Part A kit. Code: 880020', code:'880020', price:93.0, unit:'4kg pack', cov:32.0},
       ]},
-      { label:'Epoxy Coatings — Sikafloor®-263 SL', products:[
-        {id:'sf263a', name:'Sikafloor®-263 SL Part A',      desc:'Self-levelling epoxy coating — Part A (resin)',   code:'',       price:0,      unit:'20L pack', cov:6},
-        {id:'sf263b', name:'Sikafloor®-263 SL Part B',      desc:'Self-levelling epoxy coating — Part B (hardener)',code:'',       price:0,      unit:'4kg pack', cov:6},
+      { label:'Sikafloor®-264 — Epoxy Coating (Kit = Part A + Part B)', products:[
+        {id:'sf264a', name:'Sikafloor®-264 Part A',         desc:'Epoxy coating Part A — 20L tub. 1 kit covers ~150m²/coat. Add same qty Part B.', code:'', price:0, unit:'20L tub', cov:150},
+        {id:'sf264b', name:'Sikafloor®-264 Part B (Hardener)', desc:'Hardener for SF-264 — 4kg pack. Match qty 1:1 with Part A. Code: 880020',    code:'880020', price:93.0, unit:'4kg pack', cov:150},
+        {id:'piggy',  name:'Epoxy Pigment Light Grey N35',  desc:'2.3kg pack — tints SF-264 Part A. Code: EP-19338',                               code:'EP-19338', price:23.72, unit:'2.3kg pack', cov:13.95},
       ]},
-      { label:'Epoxy Coatings — Sikafloor®-264', products:[
-        {id:'sf264a', name:'Sikafloor®-264 Part A',         desc:'100% Solids Epoxy, low viscosity — Part A (resin)',code:'',      price:0,      unit:'20L pack', cov:4},
-        {id:'sf264b', name:'Sikafloor®-264 Part B',         desc:'100% Solids Epoxy — Part B (hardener)',           code:'880020', price:93.0,   unit:'4kg pack', cov:4},
-        {id:'sf264t', name:'Sikafloor®-264 T AU Part A',    desc:'Textured high-build 100% solids epoxy — Part A',  code:'',       price:0,      unit:'20L pack', cov:4},
-        {id:'sf264ta',name:'Sikafloor®-264 T AU Part B',    desc:'Textured high-build 100% solids epoxy — Part B',  code:'',       price:0,      unit:'4kg pack', cov:4},
+      { label:'Sikafloor®-263 SL — Self Levelling (Kit = Part A + Part B)', products:[
+        {id:'sf263a', name:'Sikafloor®-263 SL Part A',      desc:'Self-levelling epoxy Part A — 20L. ~150m²/coat per kit.',                        code:'', price:0, unit:'20L pack', cov:150},
+        {id:'sf263b', name:'Sikafloor®-263 SL Part B (Hardener)', desc:'Hardener for SF-263 SL — 4kg. Match qty 1:1 with Part A.',                 code:'', price:0, unit:'4kg pack', cov:150},
       ]},
-      { label:'Epoxy Coatings — Other', products:[
-        {id:'sf169',  name:'Sikafloor®-169',                desc:'Very low yellowing transparent epoxy',            code:'',       price:0,      unit:'kit',      cov:6},
+      { label:'Sikafloor®-94 — EP Primer', products:[
+        {id:'sf94a',  name:'Sikafloor®-94 Part A',          desc:'EP primer Part A — 20L pack. Covers 160m² per kit. Code: 875943',                code:'875943', price:344.8, unit:'20L pack', cov:160.0},
+        {id:'sf94b',  name:'Sikafloor®-94 Part B',          desc:'EP primer Part B — 20L pack. Covers 300m² per pack. Code: 877510',               code:'877510', price:367.0, unit:'20L pack', cov:300.0},
       ]},
-      { label:'Pigments & Additives', products:[
-        {id:'piggy',  name:'Epoxy Pigment Light Grey N35',  desc:'2.3kg — suits Sikafloor 264',                    code:'EP-19338',price:23.72, unit:'2.3kg pack', cov:13.95},
+      { label:'Other Sika Products', products:[
+        {id:'sf160',  name:'Sikafloor®-160',                desc:'2-part epoxy primer & levelling mortar',          code:'', price:0, unit:'kit',  cov:5},
+        {id:'sf158',  name:'Sikafloor®-158 W Fast Barrier', desc:'Rapid-drying hydrostatic moisture barrier',       code:'', price:0, unit:'kit',  cov:6},
+        {id:'sf169',  name:'Sikafloor®-169',                desc:'Very low yellowing transparent epoxy',            code:'', price:0, unit:'kit',  cov:6},
+        {id:'sf550',  name:'Sikafloor®-550 PA',             desc:'Abrasion & UV resistant polyaspartic',            code:'', price:0, unit:'kit',  cov:5},
+        {id:'sf304',  name:'Sikafloor®-304 W',              desc:'2-part PUR matt seal coat',                       code:'', price:0, unit:'kit',  cov:6},
       ]},
-      { label:'Polyurethane & Polyaspartic Top Coats', products:[
-        {id:'sf359au',name:'Sikafloor®-359 AU',             desc:'PU UV stable pigmented & clear coating',          code:'',       price:0,      unit:'kit',      cov:6},
-        {id:'sf550',  name:'Sikafloor®-550 PA',             desc:'Abrasion & UV resistant polyaspartic',            code:'',       price:0,      unit:'kit',      cov:5},
-        {id:'sf304',  name:'Sikafloor®-304 W',              desc:'2-part PUR matt seal coat',                       code:'',       price:0,      unit:'kit',      cov:6},
-        {id:'sf324',  name:'Sikafloor®-324',                desc:'2-part PUR tough-elastic low-VOC',                code:'',       price:0,      unit:'kit',      cov:5},
-      ]},
+
     ]
   },
   {
