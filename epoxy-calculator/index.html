@@ -231,6 +231,22 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   .li-cost,.li-sub{display:none}
   .header-right .pin-badge{display:none}
 }
+
+  /* ── SEND TO SUPPLIER ── */
+  .send-panel{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px;margin-top:14px;display:none}
+  .send-panel.open{display:block}
+  .send-panel h3{margin:0 0 14px;font-size:15px;color:var(--orange);font-weight:700}
+  .send-row{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+  .send-row label{font-size:12px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+  .send-inp{background:var(--bg);border:1px solid var(--border2);border-radius:8px;padding:10px 12px;color:var(--text1);font-size:14px;width:100%;box-sizing:border-box}
+  .send-inp:focus{outline:none;border-color:var(--orange)}
+  .send-btns{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+  .send-btn-email{background:var(--orange);color:#fff;border:none;border-radius:8px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;flex:1}
+  .send-btn-email:hover{opacity:.88}
+  .send-btn-cancel{background:var(--bg);color:var(--text2);border:1px solid var(--border2);border-radius:8px;padding:11px 18px;font-size:14px;cursor:pointer}
+  .send-btn-wa{background:#25D366;color:#fff;border:none;border-radius:8px;padding:11px 18px;font-size:14px;font-weight:700;cursor:pointer;flex:1}
+  .send-btn-wa:hover{opacity:.88}
+
 </style>
 </head>
 <body>
@@ -337,6 +353,29 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     </div>
     <div class="order-text" id="orderText" contenteditable="true">Add products to your list to generate an order summary.</div>
     <button class="copy-btn" id="copyBtn" onclick="copyOrder()">📋 Copy Order to Clipboard</button>
+    <button class="copy-btn" style="background:var(--orange);color:#fff;margin-top:8px" onclick="toggleSendPanel()">📧 Send to Supplier</button>
+  </div>
+
+  <!-- SEND TO SUPPLIER PANEL -->
+  <div class="send-panel" id="sendPanel">
+    <h3>📧 Send Order to Supplier</h3>
+    <div class="send-row">
+      <label>Supplier Email</label>
+      <input class="send-inp" id="supplierEmail" type="email" placeholder="e.g. sales@brconstruction.com.au" value="">
+    </div>
+    <div class="send-row">
+      <label>Your Name / Company</label>
+      <input class="send-inp" id="senderName" placeholder="e.g. Nick — Epoxy Bros" value="Nick — Epoxy Bros">
+    </div>
+    <div class="send-row">
+      <label>Job Reference (optional)</label>
+      <input class="send-inp" id="jobRef" placeholder="e.g. Job #104 — 2400m² warehouse">
+    </div>
+    <div class="send-btns">
+      <button class="send-btn-email" onclick="sendViaEmail()">📧 Open in Email App</button>
+      <button class="send-btn-wa" onclick="sendViaWhatsApp()">💬 WhatsApp</button>
+      <button class="send-btn-cancel" onclick="toggleSendPanel()">Cancel</button>
+    </div>
   </div>
 
   <!-- ADD PRODUCT (always visible for editors, hidden for team) -->
@@ -879,6 +918,34 @@ document.addEventListener('keydown',e=>{
 // ── INIT ──
 // Show pin on load
 document.getElementById('pinInput').focus();
+
+function toggleSendPanel(){
+  const p = document.getElementById('sendPanel');
+  p.classList.toggle('open');
+  if(p.classList.contains('open')) p.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function buildEmailBody(){
+  const orderText = document.getElementById('orderText').innerText || document.getElementById('orderText').textContent;
+  const jobRef = document.getElementById('jobRef').value.trim();
+  const sender = document.getElementById('senderName').value.trim() || 'Epoxy Bros';
+  const refLine = jobRef ? 'Job Reference: ' + jobRef + '\n' : '';
+  return 'Hi,\n\nPlease find our material order below.\n\n' + refLine + '\n' + orderText + '\n\nThanks,\n' + sender;
+}
+
+function sendViaEmail(){
+  const to = document.getElementById('supplierEmail').value.trim();
+  const jobRef = document.getElementById('jobRef').value.trim();
+  const subject = encodeURIComponent('Material Order' + (jobRef ? ' — ' + jobRef : '') + ' — Epoxy Bros');
+  const body = encodeURIComponent(buildEmailBody());
+  window.location.href = 'mailto:' + to + '?subject=' + subject + '&body=' + body;
+}
+
+function sendViaWhatsApp(){
+  const body = buildEmailBody();
+  const encoded = encodeURIComponent(body);
+  window.open('https://wa.me/?text=' + encoded, '_blank');
+}
 </script>
 </body>
 </html>
