@@ -268,19 +268,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <div class="controls">
   <div class="ctrl-group">
     <span class="ctrl-label">Area</span>
-    <input type="number" class="big-input" id="areaInput" placeholder="0" min="0" oninput="recalc()">
+    <input type="number" class="big-input" id="areaInput" placeholder="0" min="0" oninput="recalcAndRender()">
     <span class="unit-tag">m²</span>
   </div>
   <div class="ctrl-divider"></div>
   <div class="ctrl-group">
     <span class="ctrl-label">Wastage</span>
-    <input type="number" class="small-input" id="wastageInput" value="0" min="0" max="50" step="1" oninput="recalc()">
+    <input type="number" class="small-input" id="wastageInput" value="0" min="0" max="50" step="1" oninput="recalcAndRender()">
     <span class="unit-tag">%</span>
   </div>
   <div class="ctrl-divider"></div>
   <div class="ctrl-group">
     <span class="ctrl-label">Markup</span>
-    <input type="number" class="small-input" id="markupInput" value="0" min="0" max="200" step="1" oninput="recalc()">
+    <input type="number" class="small-input" id="markupInput" value="0" min="0" max="200" step="1" oninput="recalcAndRender()">
     <span class="unit-tag">%</span>
   </div>
 </div>
@@ -589,31 +589,45 @@ function renderList(){
     el.innerHTML='<div class="list-empty"><span>🧪</span>Tap a product above to add it to your list.</div>';
     footer.style.display='none'; return;
   }
-  const area = parseFloat(document.getElementById('areaInput').value)||0;
-  const wastage = parseFloat(document.getElementById('wastageInput').value)||0;
-  const effectiveArea = area * (1 + wastage/100);
+  const {area, effectiveArea} = getCalcParams();
   let totalEx=0, h='';
   keys.forEach(id=>{
     const item = myList[id];
     const unitCost = item.price||0;
-    const units = item.cov>0 && effectiveArea>0 ? Math.ceil(effectiveArea/item.cov) : item.qty||1;
+    const units = getUnitsNeeded(item, effectiveArea);
     const lineCost = unitCost * units;
     totalEx += lineCost;
     const costStr = lineCost>0 ? '$'+lineCost.toFixed(2) : '—';
-    const unitsStr = item.cov>0 && effectiveArea>0 ? `${units} units needed` : `${item.qty||1} × selected`;
-    h+=`<div class="list-item">
-      <div class="li-info">
-        <div class="li-name">${item.name}</div>
-        <div class="li-detail">${item.supplier||''} · ${item.unit||''} · ${item.cov>0?item.cov+' m²/unit':''}</div>
-      </div>
-      <div>
-        <div class="li-cost">${costStr}</div>
-        <div class="li-sub">${unitsStr}</div>
+    // Coverage-based: show calculated kits. Manual: show qty stepper.
+    const hasCov = item.cov > 0;
+    const areaSet = effectiveArea > 0;
+    let unitsHtml;
+    if(hasCov && areaSet){
+      unitsHtml = `<div class="li-sub">📦 <strong style="color:var(--text)">${units}</strong> × ${item.unit||'unit'} needed</div>
+        <div class="li-sub" style="font-size:9px;margin-top:2px">${item.cov} m²/unit · ${effectiveArea.toFixed(0)} m² effective</div>`;
+    } else if(hasCov && !areaSet){
+      unitsHtml = `<div class="li-sub" style="color:var(--orange)">⚠️ Enter area above to calculate kits</div>
         <div class="list-qty" style="margin-top:6px;justify-content:flex-end">
           <button class="qty-btn" onclick="adjustQty('${id}',-1)">−</button>
           <span class="qty-val">${item.qty||1}</span>
           <button class="qty-btn" onclick="adjustQty('${id}',1)">+</button>
-        </div>
+        </div>`;
+    } else {
+      unitsHtml = `<div class="li-sub">Manual qty</div>
+        <div class="list-qty" style="margin-top:6px;justify-content:flex-end">
+          <button class="qty-btn" onclick="adjustQty('${id}',-1)">−</button>
+          <span class="qty-val">${item.qty||1}</span>
+          <button class="qty-btn" onclick="adjustQty('${id}',1)">+</button>
+        </div>`;
+    }
+    h+=`<div class="list-item">
+      <div class="li-info">
+        <div class="li-name">${item.name}</div>
+        <div class="li-detail">${item.supplier||''}${item.unit?' · '+item.unit:''}${item.code?' · '+item.code:''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="li-cost">${costStr}</div>
+        ${unitsHtml}
       </div>
       <button class="li-rm" onclick="removeItem('${id}')">×</button>
     </div>`;
@@ -637,15 +651,32 @@ function removeItem(id){ delete myList[id]; renderBrowser(); renderList(); recal
 function clearList(){ myList={}; renderBrowser(); renderList(); recalc(); }
 
 // ── RECALC TOTALS ──
-function recalc(){
+// ── SHARED AREA/WASTAGE/MARKUP HELPERS ──
+function getCalcParams(){
   const area = parseFloat(document.getElementById('areaInput').value)||0;
   const wastage = parseFloat(document.getElementById('wastageInput').value)||0;
   const markup = parseFloat(document.getElementById('markupInput').value)||0;
   const effectiveArea = area * (1 + wastage/100);
+  return {area, wastage, markup, effectiveArea};
+}
+function getUnitsNeeded(item, effectiveArea){
+  // If coverage is set, calculate from area. Otherwise use manual qty.
+  return item.cov > 0 && effectiveArea > 0
+    ? Math.ceil(effectiveArea / item.cov)
+    : (item.qty || 1);
+}
+
+function recalcAndRender(){
+  // Re-render list so kit counts update, then recalc totals
+  renderList();
+}
+
+function recalc(){
+  const {area, markup, effectiveArea} = getCalcParams();
   let totalEx=0;
   Object.values(myList).forEach(item=>{
     const unitCost = item.price||0;
-    const units = item.cov>0 && effectiveArea>0 ? Math.ceil(effectiveArea/item.cov) : item.qty||1;
+    const units = getUnitsNeeded(item, effectiveArea);
     totalEx += unitCost * units;
   });
   const markedUp = totalEx * (1 + markup/100);
@@ -660,10 +691,7 @@ function recalc(){
 
 // ── ORDER TEXT ──
 function buildOrder(){
-  const area = parseFloat(document.getElementById('areaInput').value)||0;
-  const wastage = parseFloat(document.getElementById('wastageInput').value)||0;
-  const markup = parseFloat(document.getElementById('markupInput').value)||0;
-  const effectiveArea = area * (1+wastage/100);
+  const {area, wastage, markup, effectiveArea} = getCalcParams();
   const keys = Object.keys(myList);
   if(!keys.length){ document.getElementById('orderText').textContent='Add products to your list to generate an order summary.'; return; }
   const d = new Date(); const ds = d.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
@@ -674,7 +702,7 @@ function buildOrder(){
     const item=myList[id];
     const sup=item.supplier||'Other';
     if(!bySup[sup]) bySup[sup]=[];
-    const units = item.cov>0&&effectiveArea>0 ? Math.ceil(effectiveArea/item.cov) : item.qty||1;
+    const units = getUnitsNeeded(item, effectiveArea);
     const lineCost = (item.price||0)*units;
     totalEx+=lineCost;
     bySup[sup].push({...item,units,lineCost});
