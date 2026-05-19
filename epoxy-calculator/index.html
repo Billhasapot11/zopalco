@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Epoxy Bros — Material Calculator</title>
+<style>
+/* ── RESET & BASE ── */
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0d14;--bg2:#111320;--bg3:#181b28;--bg4:#1e2133;
+  --border:#242740;--border2:#2e3250;
+  --orange:#ff6b35;--orange2:#ff8c5a;--orange-dim:#2a1a0e;
+  --green:#4ade80;--green-dim:#0a1f10;
+  --blue:#7ab8f5;--blue-dim:#090f1f;
+  --red:#f87171;
+  --text:#e8eaf0;--text2:#9ea3b8;--text3:#555a72;--text4:#363a52;
+  --radius:10px;--radius-sm:7px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(135deg,#0e1018 0%,#141726 100%);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px rgba(0,0,0,.5)}
+.logo-wrap{display:flex;align-items:center;gap:10px}
+.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--orange),#e04020);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.logo-text{font-size:18px;font-weight:900;letter-spacing:-.3px}
+.logo-text span{color:var(--orange)}
+.logo-sub{font-size:10px;color:var(--text3);margin-top:1px;letter-spacing:.5px}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.edit-btn{background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text3);font-size:12px;padding:7px 14px;cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px}
+.edit-btn:hover{border-color:var(--orange);color:var(--orange)}
+.edit-btn.on{border-color:var(--green);color:var(--green);background:var(--green-dim)}
+.pin-badge{font-size:10px;padding:4px 10px;border-radius:20px;font-weight:700;letter-spacing:.5px}
+.pin-badge.team{background:#1a1230;color:#a78bfa;border:1px solid #3d2d6a}
+.pin-badge.editor{background:var(--green-dim);color:var(--green);border:1px solid #1a4a28}
+
+/* ── CONTROLS BAR ── */
+.controls{background:var(--bg2);border-bottom:1px solid var(--border);padding:12px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.ctrl-group{display:flex;align-items:center;gap:8px}
+.ctrl-label{font-size:11px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.6px;white-space:nowrap}
+.big-input{font-size:26px;font-weight:800;color:#fff;background:var(--bg3);border:2px solid var(--border2);border-radius:var(--radius-sm);padding:6px 14px;width:140px;text-align:center;outline:none;transition:border-color .15s}
+.big-input:focus{border-color:var(--orange)}
+.small-input{font-size:14px;font-weight:600;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:7px 10px;width:64px;text-align:center;outline:none;transition:border-color .15s}
+.small-input:focus{border-color:var(--orange)}
+.unit-tag{font-size:13px;color:var(--text3);font-weight:600}
+.ctrl-divider{width:1px;height:28px;background:var(--border);flex-shrink:0}
+
+/* ── TOTALS STRIP ── */
+.totals{display:flex;background:var(--bg2);border-bottom:2px solid var(--border)}
+.t-cell{flex:1;padding:10px 8px;text-align:center;border-right:1px solid var(--border)}
+.t-cell:last-child{border-right:none}
+.t-label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--text4);font-weight:700}
+.t-value{font-size:17px;font-weight:900;margin-top:4px;line-height:1}
+.tv-orange{color:var(--orange)}
+.tv-green{color:var(--green)}
+.tv-white{color:#fff}
+.tv-blue{color:var(--blue)}
+
+/* ── MAIN LAYOUT ── */
+.main{max-width:1100px;margin:0 auto;padding:28px 20px 100px}
+
+/* ── SECTION HEADER ── */
+.sec-hdr{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.sec-num{width:24px;height:24px;background:var(--orange);border-radius:50%;font-size:11px;font-weight:900;color:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sec-title{font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.8px;color:var(--text2)}
+.sec-line{flex:1;height:1px;background:var(--border)}
+
+/* ── SUPPLIER BLOCKS ── */
+.sup-block{margin-bottom:20px;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg2)}
+.sup-head{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--border)}
+.sup-head.sika{background:linear-gradient(90deg,#051a08,#0a1512);border-bottom-color:#1a2e1a}
+.sup-head.apc{background:linear-gradient(90deg,#060b1e,#080d1a);border-bottom-color:#1a2040}
+.sup-head.vfa{background:linear-gradient(90deg,#1a0b05,#150d06);border-bottom-color:#2d1a0a}
+.sup-head.custom{background:linear-gradient(90deg,#160c1e,#120a1a);border-bottom-color:#2d1a40}
+.sup-icon{font-size:20px}
+.sup-info{}
+.sup-name{font-size:13px;font-weight:900;letter-spacing:.2px}
+.sup-name.sika{color:#4ade80}
+.sup-name.apc{color:var(--blue)}
+.sup-name.vfa{color:var(--orange)}
+.sup-name.custom{color:#c084fc}
+.sup-tag{font-size:10px;color:var(--text4);margin-top:1px}
+.sup-count{margin-left:auto;font-size:10px;color:var(--text4);background:var(--bg3);border-radius:5px;padding:3px 9px;font-weight:600}
+
+.subcat-block{padding:12px 16px 8px;border-bottom:1px solid #13151f}
+.subcat-block:last-child{border-bottom:none}
+.subcat-label{font-size:9px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text4);font-weight:700;margin-bottom:10px;padding-left:2px}
+
+.prod-grid{display:flex;flex-wrap:wrap;gap:7px}
+
+/* ── PRODUCT BUTTON ── */
+.prod-btn{
+  display:flex;flex-direction:column;
+  background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:10px 13px;cursor:pointer;text-align:left;
+  transition:border-color .12s,background .12s,transform .08s;
+  min-width:165px;max-width:260px;flex:1;position:relative;
+}
+.prod-btn:hover{border-color:var(--orange);background:var(--orange-dim);transform:translateY(-1px)}
+.prod-btn:active{transform:translateY(0)}
+.prod-btn.in-list{background:var(--green-dim);border-color:var(--green)}
+.prod-btn.in-list:hover{background:#071509;border-color:var(--red)}
+.pb-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.3;margin-bottom:3px}
+.prod-btn.in-list .pb-name{color:var(--green)}
+.pb-desc{font-size:10px;color:var(--text3);line-height:1.4;margin-bottom:4px}
+.pb-footer{display:flex;justify-content:space-between;align-items:flex-end;gap:6px;margin-top:auto}
+.pb-price{font-size:11px;color:var(--text4)}
+.pb-price.has-p{color:var(--orange);font-weight:700}
+.pb-code{font-size:9px;color:var(--text4);font-family:monospace;background:var(--bg);padding:1px 5px;border-radius:3px}
+.pb-tick{position:absolute;top:7px;right:8px;font-size:11px;color:var(--green)}
+.pb-cov{font-size:9px;color:var(--text4);margin-top:2px}
+
+/* edit overlay on product */
+.prod-btn.edit-mode{border-style:dashed;border-color:var(--border2)}
+.prod-btn.edit-mode:hover{border-color:#a78bfa;background:#100c1a}
+.edit-pencil{position:absolute;top:7px;right:8px;font-size:11px;color:var(--text4);opacity:.6}
+
+/* ── MY LIST ── */
+.list-card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;margin-bottom:20px}
+.list-hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--border)}
+.list-title-row{display:flex;align-items:center;gap:8px}
+.list-title{font-size:13px;font-weight:800}
+.badge{background:var(--orange);border-radius:10px;font-size:10px;padding:2px 8px;color:#fff;font-weight:700}
+.clr-btn{background:none;border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text3);font-size:11px;padding:5px 12px;cursor:pointer;transition:all .15s}
+.clr-btn:hover{border-color:var(--red);color:var(--red)}
+.list-empty{color:var(--text4);font-size:12px;text-align:center;padding:32px;line-height:2.2}
+.list-empty span{display:block;font-size:28px;margin-bottom:6px}
+
+.list-item{display:grid;grid-template-columns:1fr auto auto;align-items:start;gap:12px;padding:11px 18px;border-bottom:1px solid #12141e;transition:background .1s}
+.list-item:hover{background:var(--bg3)}
+.list-item:last-child{border-bottom:none}
+.li-info{}
+.li-name{font-size:12px;font-weight:700;color:var(--text)}
+.li-detail{font-size:10px;color:var(--text3);margin-top:2px}
+.li-cost{font-size:13px;font-weight:800;color:var(--green);text-align:right;white-space:nowrap}
+.li-sub{font-size:9px;color:var(--text4);text-align:right;margin-top:2px}
+.li-rm{background:none;border:none;color:var(--text4);font-size:17px;cursor:pointer;padding:0 2px;line-height:1;transition:color .12s;flex-shrink:0}
+.li-rm:hover{color:var(--red)}
+.list-qty{display:flex;align-items:center;gap:5px}
+.qty-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:4px;color:var(--text2);font-size:12px;width:22px;height:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .12s}
+.qty-btn:hover{border-color:var(--orange);color:var(--orange)}
+.qty-val{font-size:12px;font-weight:700;color:var(--text);min-width:22px;text-align:center}
+
+.list-footer{padding:13px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;align-items:center;gap:22px;flex-wrap:wrap}
+.lf-item{font-size:11px;color:var(--text3)}
+.lf-item strong{color:var(--text);font-weight:700;margin-left:4px}
+.lf-total{font-size:18px;font-weight:900;color:var(--green)}
+
+/* ── ORDER BOX ── */
+.order-card{background:var(--blue-dim);border:1px solid #1e3a5f;border-radius:var(--radius);padding:18px;margin-bottom:20px}
+.order-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.order-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#3a6a8f;font-weight:700}
+.refresh-btn{background:none;border:1px solid #1e3a5f;border-radius:5px;color:#3a6a8f;font-size:10px;padding:4px 10px;cursor:pointer;transition:all .12s}
+.refresh-btn:hover{border-color:var(--blue);color:var(--blue)}
+.order-text{font-size:11px;color:#8aa8c8;line-height:2;font-family:'SF Mono',Consolas,monospace;white-space:pre-wrap;word-break:break-word;outline:none;min-height:140px;width:100%}
+.copy-btn{width:100%;margin-top:14px;background:#1e3a5f;border:1px solid #2a5a8f;border-radius:var(--radius-sm);color:var(--blue);font-size:13px;font-weight:700;padding:12px;cursor:pointer;transition:all .15s;letter-spacing:.3px}
+.copy-btn:hover{background:#2a5a8f;color:#fff}
+.copy-btn.done{background:#14532d;border-color:var(--green);color:var(--green)}
+
+/* ── ADD PRODUCT FORM ── */
+.add-card{background:var(--bg2);border:1px dashed var(--border2);border-radius:var(--radius);padding:18px;margin-bottom:20px}
+.add-title{font-size:12px;font-weight:800;color:#c084fc;margin-bottom:14px;text-transform:uppercase;letter-spacing:.8px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.fg{display:flex;flex-direction:column;gap:5px}
+.fg label{font-size:9px;text-transform:uppercase;letter-spacing:.8px;color:var(--text4);font-weight:700}
+.finp{background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);font-size:12px;padding:9px 11px;outline:none;transition:border-color .15s;width:100%}
+.finp:focus{border-color:#a78bfa}
+.fadd-btn{background:var(--border2);border:none;border-radius:var(--radius-sm);color:var(--text);font-size:13px;font-weight:700;padding:11px;cursor:pointer;width:100%;transition:all .15s;grid-column:1/-1}
+.fadd-btn:hover{background:#a78bfa;color:#fff}
+
+/* ── EDIT MODAL ── */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:500;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:12px;width:100%;max-width:480px;box-shadow:var(--shadow);transform:scale(.95);transition:transform .2s}
+.modal-overlay.open .modal{transform:scale(1)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--border)}
+.modal-title{font-size:14px;font-weight:800}
+.modal-close{background:none;border:none;color:var(--text3);font-size:20px;cursor:pointer;line-height:1;padding:2px 6px}
+.modal-close:hover{color:var(--red)}
+.modal-body{padding:20px}
+.modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px}
+.modal-footer{display:flex;gap:10px}
+.mbtn{flex:1;padding:11px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s}
+.mbtn-save{background:var(--orange);color:#fff}
+.mbtn-save:hover{background:var(--orange2)}
+.mbtn-del{background:var(--bg3);color:var(--red);border:1px solid var(--border2)}
+.mbtn-del:hover{background:#2a0a0a;border-color:var(--red)}
+.mbtn-cancel{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+.mbtn-cancel:hover{border-color:var(--text2)}
+
+/* ── PIN MODAL ── */
+.pin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;display:flex;align-items:center;justify-content:center;padding:20px}
+.pin-box{background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:32px 28px;width:100%;max-width:340px;text-align:center;box-shadow:var(--shadow)}
+.pin-icon{font-size:36px;margin-bottom:12px}
+.pin-title{font-size:17px;font-weight:900;margin-bottom:6px}
+.pin-sub{font-size:12px;color:var(--text3);margin-bottom:22px;line-height:1.6}
+.pin-input{width:100%;background:var(--bg);border:2px solid var(--border2);border-radius:var(--radius-sm);color:#fff;font-size:28px;font-weight:900;letter-spacing:12px;padding:14px;text-align:center;outline:none;transition:border-color .15s;margin-bottom:14px}
+.pin-input:focus{border-color:var(--orange)}
+.pin-input.error{border-color:var(--red);animation:shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.pin-btns{display:flex;gap:10px}
+.pin-btn{flex:1;padding:12px;border-radius:var(--radius-sm);font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .15s}
+.pin-btn-ok{background:var(--orange);color:#fff}
+.pin-btn-ok:hover{background:var(--orange2)}
+.pin-btn-skip{background:var(--bg3);color:var(--text2);border:1px solid var(--border2)}
+.pin-btn-skip:hover{border-color:var(--text2)}
+.pin-err{font-size:11px;color:var(--red);margin-top:8px;min-height:16px}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e2133;border:1px solid var(--border2);border-radius:8px;padding:10px 20px;font-size:12px;font-weight:600;color:var(--text);box-shadow:var(--shadow);opacity:0;transition:all .25s;z-index:700;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+/* ── RESPONSIVE ── */
+@media(max-width:640px){
+  .header{padding:10px 14px}
+  .logo-text{font-size:15px}
+  .controls{padding:10px 14px;gap:10px}
+  .big-input{font-size:20px;width:110px}
+  .ctrl-divider{display:none}
+  .main{padding:18px 12px 80px}
+  .t-value{font-size:14px}
+  .form-grid,.modal-grid{grid-template-columns:1fr}
+  .prod-btn{min-width:140px}
+  .list-item{grid-template-columns:1fr auto}
+  .li-cost,.li-sub{display:none}
+  .header-right .pin-badge{display:none}
+}
+</style>
+</head>
+<body>
+
+<!-- PIN GATE -->
+<div class="pin-overlay" id="pinOverlay">
+  <div class="pin-box">
+    <div class="pin-icon">🔒</div>
+    <div class="pin-title">Epoxy Bros Calculator</div>
+    <div class="pin-sub">Enter your team PIN to continue.<br>Editors use the 4-digit editor PIN to unlock editing.</div>
+    <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pinInput" placeholder="····" oninput="checkPin()" onkeydown="if(event.key==='Enter')checkPin(true)">
+    <div class="pin-err" id="pinErr"></div>
+    <div class="pin-btns" style="margin-top:14px">
+      <button class="pin-btn pin-btn-ok" onclick="checkPin(true)">Enter</button>
+    </div>
+  </div>
+</div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="logo-wrap">
+    <div class="logo-icon">🏗️</div>
+    <div>
+      <div class="logo-text">Epoxy <span>Bros</span></div>
+      <div class="logo-sub">Material Calculator · Sika · APC · VFA</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="pin-badge" id="roleBadge" style="display:none"></span>
+    <button class="edit-btn" id="editBtn" onclick="toggleEdit()" style="display:none">✏️ Edit Products</button>
+  </div>
+</div>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="ctrl-group">
+    <span class="ctrl-label">Area</span>
+    <input type="number" class="big-input" id="areaInput" placeholder="0" min="0" oninput="recalc()">
+    <span class="unit-tag">m²</span>
+  </div>
+  <div class="ctrl-divider"></div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Wastage</span>
+    <input type="number" class="small-input" id="wastageInput" value="0" min="0" max="50" step="1" oninput="recalc()">
+    <span class="unit-tag">%</span>
+  </div>
+  <div class="ctrl-divider"></div>
+  <div class="ctrl-group">
+    <span class="ctrl-label">Markup</span>
+    <input type="number" class="small-input" id="markupInput" value="0" min="0" max="200" step="1" oninput="recalc()">
+    <span class="unit-tag">%</span>
+  </div>
+</div>
+
+<!-- TOTALS -->
+<div class="totals">
+  <div class="t-cell"><div class="t-label">Ex GST</div><div class="t-value tv-orange" id="totEx">$0.00</div></div>
+  <div class="t-cell"><div class="t-label">GST</div><div class="t-value tv-white" id="totGST">$0.00</div></div>
+  <div class="t-cell"><div class="t-label">Inc GST</div><div class="t-value tv-green" id="totInc">$0.00</div></div>
+  <div class="t-cell"><div class="t-label">Per m²</div><div class="t-value tv-blue" id="totPm2" style="font-size:13px">$0.00</div></div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- STEP 1 -->
+  <div class="sec-hdr">
+    <div class="sec-num">1</div>
+    <div class="sec-title">Select Products</div>
+    <div class="sec-line"></div>
+  </div>
+  <div id="productBrowser"></div>
+
+  <!-- STEP 2 -->
+  <div class="sec-hdr" style="margin-top:6px">
+    <div class="sec-num">2</div>
+    <div class="sec-title">My List</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="list-card">
+    <div class="list-hdr">
+      <div class="list-title-row">
+        <span class="list-title">Selected Products</span>
+        <span class="badge" id="listBadge">0</span>
+      </div>
+      <button class="clr-btn" onclick="clearList()">Clear all</button>
+    </div>
+    <div id="listItems">
+      <div class="list-empty"><span>🧪</span>Tap a product above to add it to your list.</div>
+    </div>
+    <div class="list-footer" id="listFooter" style="display:none"></div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="sec-hdr">
+    <div class="sec-num">3</div>
+    <div class="sec-title">Order Summary</div>
+    <div class="sec-line"></div>
+  </div>
+  <div class="order-card">
+    <div class="order-hdr">
+      <span class="order-label">📋 Order Text</span>
+      <button class="refresh-btn" onclick="buildOrder()">↺ Refresh</button>
+    </div>
+    <div class="order-text" id="orderText" contenteditable="true">Add products to your list to generate an order summary.</div>
+    <button class="copy-btn" id="copyBtn" onclick="copyOrder()">📋 Copy Order to Clipboard</button>
+  </div>
+
+  <!-- ADD PRODUCT (always visible for editors, hidden for team) -->
+  <div class="add-card" id="addCard" style="display:none">
+    <div class="add-title">➕ Add Your Own Product</div>
+    <div class="form-grid">
+      <div class="fg"><label>Product Name *</label><input class="finp" id="newName" placeholder="e.g. Sikafloor® 161 Part A"></div>
+      <div class="fg"><label>Supplier</label><input class="finp" id="newSupplier" placeholder="e.g. Sika / APC / VFA"></div>
+      <div class="fg"><label>Stock Code</label><input class="finp" id="newCode" placeholder="e.g. 875943"></div>
+      <div class="fg"><label>Unit</label><input class="finp" id="newUnit" placeholder="e.g. 20L kit"></div>
+      <div class="fg"><label>Price (ex GST) $</label><input class="finp" type="number" id="newPrice" placeholder="0.00" min="0" step="0.01"></div>
+      <div class="fg"><label>Coverage (m² / unit)</label><input class="finp" type="number" id="newCoverage" placeholder="0" min="0" step="0.1"></div>
+      <div class="fg" style="grid-column:1/-1"><label>Description</label><input class="finp" id="newDesc" placeholder="Short description of product"></div>
+      <button class="fadd-btn" onclick="addCustomProduct()">Add Product to List</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal">
+    <div class="modal-head">
+      <span class="modal-title" id="modalTitle">Edit Product</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editId">
+      <div class="modal-grid">
+        <div class="fg"><label>Product Name</label><input class="finp" id="editName"></div>
+        <div class="fg"><label>Supplier</label><input class="finp" id="editSupplier"></div>
+        <div class="fg"><label>Stock Code</label><input class="finp" id="editCode"></div>
+        <div class="fg"><label>Unit</label><input class="finp" id="editUnit"></div>
+        <div class="fg"><label>Price (ex GST) $</label><input class="finp" type="number" id="editPrice" min="0" step="0.01"></div>
+        <div class="fg"><label>Coverage (m² / unit)</label><input class="finp" type="number" id="editCov" min="0" step="0.1"></div>
+        <div class="fg" style="grid-column:1/-1"><label>Description</label><input class="finp" id="editDesc"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="mbtn mbtn-save" onclick="saveEdit()">💾 Save</button>
+        <button class="mbtn mbtn-del" onclick="deleteProduct()">🗑 Delete</button>
+        <button class="mbtn mbtn-cancel" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── PINS ──
+const PINS = { team: '2468', editor: '1953' };
+let role = null; // 'team' | 'editor'
+let editMode = false;
+
+// ── PRODUCT DATA ──
+// Loaded from localStorage or defaults
+const DEFAULT_SECTIONS = [
+  {
+    id:'sika', cls:'sika', icon:'🟢', name:'Sika Australia', tag:'BR Construction Supplies — Torrensville SA',
+    subcats:[
+      { label:'Primers & Moisture Barriers', products:[
+        {id:'sf94a',  name:'Sikafloor®-94 Part A',          desc:'2-part EP primer — Part A',                      code:'875943', price:0,      unit:'20L',      cov:0},
+        {id:'sf94b',  name:'Sikafloor®-94 Part B',          desc:'2-part EP primer — Part B',                      code:'877510', price:0,      unit:'4L',       cov:0},
+        {id:'sf161a', name:'Sikafloor®-161 Part A',         desc:'Epoxy primer & DPM — Part A',                    code:'879638', price:0,      unit:'20L',      cov:0},
+        {id:'sf161b', name:'Sikafloor®-161 Part B / 160',   desc:'Epoxy primer hardener — Part B',                 code:'880020', price:0,      unit:'4L',       cov:0},
+        {id:'sf160',  name:'Sikafloor®-160',                desc:'2-part epoxy primer & levelling mortar',          code:'',       price:0,      unit:'kit',      cov:5},
+        {id:'sf158',  name:'Sikafloor®-158 W Fast Barrier', desc:'Rapid-drying hydrostatic moisture barrier',       code:'',       price:0,      unit:'kit',      cov:6},
+      ]},
+      { label:'Epoxy Coatings', products:[
+        {id:'sf263',  name:'Sikafloor®-263 SL',             desc:'Self-levelling epoxy floor coating',              code:'',       price:0,      unit:'kit',      cov:6},
+        {id:'sf264',  name:'Sikafloor®-264',                desc:'100% Solids Epoxy — low viscosity',               code:'',       price:0,      unit:'20L kit',  cov:4},
+        {id:'sf264t', name:'Sikafloor®-264 T AU',           desc:'Textured high-build 100% solids epoxy',           code:'',       price:0,      unit:'kit',      cov:4},
+        {id:'sf169',  name:'Sikafloor®-169',                desc:'Very low yellowing transparent epoxy',            code:'',       price:0,      unit:'kit',      cov:6},
+      ]},
+      { label:'Pigments & Additives', products:[
+        {id:'piggy',  name:'Epoxy Pigment Light Grey N35',  desc:'2.3kg — suits Sikafloor 264',                    code:'EP-19338',price:23.72, unit:'2.3kg pk', cov:13.99},
+      ]},
+      { label:'Polyurethane & Polyaspartic Top Coats', products:[
+        {id:'sf359au',name:'Sikafloor®-359 AU',             desc:'PU UV stable pigmented & clear coating',          code:'',       price:0,      unit:'kit',      cov:6},
+        {id:'sf550',  name:'Sikafloor®-550 PA',             desc:'Abrasion & UV resistant polyaspartic',            code:'',       price:0,      unit:'kit',      cov:5},
+        {id:'sf304',  name:'Sikafloor®-304 W',              desc:'2-part PUR matt seal coat',                       code:'',       price:0,      unit:'kit',      cov:6},
+        {id:'sf324',  name:'Sikafloor®-324',                desc:'2-part PUR tough-elastic low-VOC',                code:'',       price:0,      unit:'kit',      cov:5},
+      ]},
+    ]
+  },
+  {
+    id:'apc', cls:'apc', icon:'🔵', name:'APC — Australian Protective Coatings', tag:'APAS accredited products',
+    subcats:[
+      { label:'EPO100® Epoxy Range', products:[
+        {id:'epo100c',name:'EPO100® Clear Epoxy Resin',     desc:'2-pack 100% solids clear epoxy',                 code:'',       price:0,      unit:'kit',      cov:6},
+        {id:'epo100t',name:'EPO100T® Tinted Epoxy Resin',   desc:'Tinted 2-pack epoxy — APAS accredited',          code:'',       price:0,      unit:'12L kit',  cov:6},
+        {id:'epo100', name:'EPO100® 20L Tinted Epoxy',      desc:'20L tinted high-solids epoxy',                   code:'EP Apc', price:21.00,  unit:'litre',    cov:6},
+        {id:'epo12t', name:'EPO100T® 12L Tinted Kit',       desc:'12L tinted epoxy kit',                           code:'Apc e12',price:24.53,  unit:'litre',    cov:6},
+      ]},
+      { label:'Polyurethane Top Coats', products:[
+        {id:'tetra',  name:'APC Tetrathane® Single Pack PU',desc:'Single pack PU top coat — 20L drum',             code:'',       price:570.00, unit:'20L drum', cov:120},
+        {id:'tetra2', name:'APC Tetrathane® 2-Pack PU',     desc:'Superior durability & chemical resistance',      code:'',       price:0,      unit:'kit',      cov:6},
+      ]},
+      { label:'Polyaspartic Top Coats', products:[
+        {id:'apcpa',  name:'APC Polyaspartic Topcoat',      desc:'Fast cure, UV stable',                           code:'',       price:0,      unit:'kit',      cov:6},
+        {id:'apcpa2', name:'APC Polyaspartic 50% (slow)',   desc:'Slower cure — larger jobs',                      code:'',       price:0,      unit:'kit',      cov:6},
+        {id:'apcpa3', name:'APC Polyaspartic 85% (fast)',   desc:'Fast cure — quick turnaround',                   code:'',       price:0,      unit:'kit',      cov:6},
+      ]},
+      { label:'Concrete Treatment', products:[
+        {id:'apccs',  name:'APC Concrete Sealer',           desc:'Penetrating concrete sealer',                    code:'',       price:0,      unit:'litre',    cov:8},
+        {id:'apcdg',  name:'APC Densifier & Grout',         desc:'Concrete densifier and grout',                   code:'',       price:0,      unit:'litre',    cov:10},
+      ]},
+    ]
+  },
+  {
+    id:'vfa', cls:'vfa', icon:'🟠', name:'Vinyl Flakes Australia', tag:'Decorative flake systems',
+    subcats:[
+      { label:'Vinyl Flakes', products:[
+        {id:'vf1kg',  name:'Vinyl Flakes — 1kg Bag',        desc:'Standard blend decorative flake',                code:'',       price:0,      unit:'1kg bag',  cov:10},
+        {id:'vf5kg',  name:'Vinyl Flakes — 5kg Bag',        desc:'Standard blend decorative flake',                code:'',       price:0,      unit:'5kg bag',  cov:50},
+        {id:'vfcust', name:'Vinyl Flakes — Custom Blend',   desc:'Custom colour — contact for pricing',            code:'',       price:0,      unit:'kg',       cov:10},
+      ]},
+    ]
+  },
+];
+
+// ── STATE ──
+let SECTIONS = JSON.parse(localStorage.getItem('eb_sections') || 'null') || DEFAULT_SECTIONS;
+let myList = {}; // { id: { ...product, qty: 1 } }
+
+// flat lookup
+function buildLookup(){
+  const m={};
+  SECTIONS.forEach(s=>s.subcats.forEach(sc=>sc.products.forEach(p=>{
+    p.supplier=p.supplier||s.name; p.supplierId=p.supplierId||s.id; m[p.id]=p;
+  })));
+  return m;
+}
+let ALL = buildLookup();
+
+function saveData(){ localStorage.setItem('eb_sections', JSON.stringify(SECTIONS)); ALL=buildLookup(); }
+
+// ── PIN LOGIC ──
+function checkPin(submit=false){
+  const v = document.getElementById('pinInput').value;
+  const err = document.getElementById('pinErr');
+  if(!submit && v.length < 4) return;
+  if(v === PINS.editor){ role='editor'; unlockApp(); }
+  else if(v === PINS.team){ role='team'; unlockApp(); }
+  else if(submit){
+    err.textContent='Incorrect PIN. Try again.';
+    document.getElementById('pinInput').classList.add('error');
+    setTimeout(()=>document.getElementById('pinInput').classList.remove('error'),400);
+    document.getElementById('pinInput').value='';
+  }
+}
+function unlockApp(){
+  document.getElementById('pinOverlay').style.display='none';
+  const rb = document.getElementById('roleBadge');
+  if(role==='editor'){ rb.textContent='🔓 Editor'; rb.className='pin-badge editor'; rb.style.display=''; document.getElementById('editBtn').style.display=''; }
+  else { rb.textContent='👷 Team'; rb.className='pin-badge team'; rb.style.display=''; }
+  render();
+}
+
+// ── TOGGLE EDIT MODE ──
+function toggleEdit(){
+  if(role!=='editor'){ showToast('Editor PIN required to edit products.'); return; }
+  editMode = !editMode;
+  const btn = document.getElementById('editBtn');
+  btn.className = 'edit-btn' + (editMode?' on':'');
+  btn.textContent = editMode ? '✅ Done Editing' : '✏️ Edit Products';
+  document.getElementById('addCard').style.display = editMode ? '' : 'none';
+  render();
+}
+
+// ── RENDER ──
+function render(){
+  renderBrowser();
+  renderList();
+  recalc();
+}
+
+function renderBrowser(){
+  const el = document.getElementById('productBrowser');
+  let h = '';
+  SECTIONS.forEach(s=>{
+    const total = s.subcats.reduce((n,sc)=>n+sc.products.length,0);
+    h+=`<div class="sup-block">
+      <div class="sup-head ${s.cls}">
+        <span class="sup-icon">${s.icon}</span>
+        <div class="sup-info"><div class="sup-name ${s.cls}">${s.name}</div><div class="sup-tag">${s.tag}</div></div>
+        <div class="sup-count">${total} products</div>
+      </div>`;
+    s.subcats.forEach(sc=>{
+      h+=`<div class="subcat-block">
+        <div class="subcat-label">${sc.label}</div>
+        <div class="prod-grid">`;
+      sc.products.forEach(p=>{
+        const inList = !!myList[p.id];
+        const priceStr = p.price>0 ? '$'+p.price.toFixed(2)+' / '+p.unit : 'Price TBC';
+        const hasp = p.price>0;
+        const covStr = p.cov>0 ? p.cov+' m²/unit' : '';
+        if(editMode){
+          h+=`<button class="prod-btn edit-mode" onclick="openEdit('${p.id}')">
+            <span class="edit-pencil">✏️</span>
+            <div class="pb-name">${p.name}</div>
+            <div class="pb-desc">${p.desc||''}</div>
+            <div class="pb-footer">
+              <span class="pb-price${hasp?' has-p':''}">${priceStr}</span>
+              ${p.code?`<span class="pb-code">${p.code}</span>`:''}
+            </div>
+            ${covStr?`<div class="pb-cov">📐 ${covStr}</div>`:''}
+          </button>`;
+        } else {
+          h+=`<button class="prod-btn${inList?' in-list':''}" onclick="toggleProduct('${p.id}')">
+            ${inList?`<span class="pb-tick">✓</span>`:''}
+            <div class="pb-name">${p.name}</div>
+            <div class="pb-desc">${p.desc||''}</div>
+            <div class="pb-footer">
+              <span class="pb-price${hasp?' has-p':''}">${priceStr}</span>
+              ${p.code?`<span class="pb-code">${p.code}</span>`:''}
+            </div>
+            ${covStr?`<div class="pb-cov">📐 ${covStr}</div>`:''}
+          </button>`;
+        }
+      });
+      h+='</div></div>';
+    });
+    h+='</div>';
+  });
+  el.innerHTML = h;
+}
+
+// ── TOGGLE PRODUCT ──
+function toggleProduct(id){
+  if(editMode) return;
+  const p = ALL[id];
+  if(!p) return;
+  if(myList[id]){ delete myList[id]; }
+  else { myList[id] = {...p, qty:1}; }
+  renderBrowser();
+  renderList();
+  recalc();
+}
+
+// ── RENDER LIST ──
+function renderList(){
+  const el = document.getElementById('listItems');
+  const footer = document.getElementById('listFooter');
+  const badge = document.getElementById('listBadge');
+  const keys = Object.keys(myList);
+  badge.textContent = keys.length;
+  if(!keys.length){
+    el.innerHTML='<div class="list-empty"><span>🧪</span>Tap a product above to add it to your list.</div>';
+    footer.style.display='none'; return;
+  }
+  const area = parseFloat(document.getElementById('areaInput').value)||0;
+  const wastage = parseFloat(document.getElementById('wastageInput').value)||0;
+  const effectiveArea = area * (1 + wastage/100);
+  let totalEx=0, h='';
+  keys.forEach(id=>{
+    const item = myList[id];
+    const unitCost = item.price||0;
+    const units = item.cov>0 && effectiveArea>0 ? Math.ceil(effectiveArea/item.cov) : item.qty||1;
+    const lineCost = unitCost * units;
+    totalEx += lineCost;
+    const costStr = lineCost>0 ? '$'+lineCost.toFixed(2) : '—';
+    const unitsStr = item.cov>0 && effectiveArea>0 ? `${units} units needed` : `${item.qty||1} × selected`;
+    h+=`<div class="list-item">
+      <div class="li-info">
+        <div class="li-name">${item.name}</div>
+        <div class="li-detail">${item.supplier||''} · ${item.unit||''} · ${item.cov>0?item.cov+' m²/unit':''}</div>
+      </div>
+      <div>
+        <div class="li-cost">${costStr}</div>
+        <div class="li-sub">${unitsStr}</div>
+        <div class="list-qty" style="margin-top:6px;justify-content:flex-end">
+          <button class="qty-btn" onclick="adjustQty('${id}',-1)">−</button>
+          <span class="qty-val">${item.qty||1}</span>
+          <button class="qty-btn" onclick="adjustQty('${id}',1)">+</button>
+        </div>
+      </div>
+      <button class="li-rm" onclick="removeItem('${id}')">×</button>
+    </div>`;
+  });
+  el.innerHTML = h;
+  const gst = totalEx*0.1;
+  footer.style.display='flex';
+  footer.innerHTML=`
+    <span class="lf-item">Ex GST<strong>$${totalEx.toFixed(2)}</strong></span>
+    <span class="lf-item">GST<strong>$${gst.toFixed(2)}</strong></span>
+    <span class="lf-total">$${(totalEx+gst).toFixed(2)} inc GST</span>`;
+  buildOrder();
+}
+
+function adjustQty(id, delta){
+  if(!myList[id]) return;
+  myList[id].qty = Math.max(1,(myList[id].qty||1)+delta);
+  renderList(); recalc();
+}
+function removeItem(id){ delete myList[id]; renderBrowser(); renderList(); recalc(); }
+function clearList(){ myList={}; renderBrowser(); renderList(); recalc(); }
+
+// ── RECALC TOTALS ──
+function recalc(){
+  const area = parseFloat(document.getElementById('areaInput').value)||0;
+  const wastage = parseFloat(document.getElementById('wastageInput').value)||0;
+  const markup = parseFloat(document.getElementById('markupInput').value)||0;
+  const effectiveArea = area * (1 + wastage/100);
+  let totalEx=0;
+  Object.values(myList).forEach(item=>{
+    const unitCost = item.price||0;
+    const units = item.cov>0 && effectiveArea>0 ? Math.ceil(effectiveArea/item.cov) : item.qty||1;
+    totalEx += unitCost * units;
+  });
+  const markedUp = totalEx * (1 + markup/100);
+  const gst = markedUp*0.1;
+  const inc = markedUp + gst;
+  const pm2 = area>0 ? markedUp/area : 0;
+  document.getElementById('totEx').textContent  = '$'+markedUp.toFixed(2);
+  document.getElementById('totGST').textContent  = '$'+gst.toFixed(2);
+  document.getElementById('totInc').textContent  = '$'+inc.toFixed(2);
+  document.getElementById('totPm2').textContent  = '$'+pm2.toFixed(2)+'/m²';
+}
+
+// ── ORDER TEXT ──
+function buildOrder(){
+  const area = parseFloat(document.getElementById('areaInput').value)||0;
+  const wastage = parseFloat(document.getElementById('wastageInput').value)||0;
+  const markup = parseFloat(document.getElementById('markupInput').value)||0;
+  const effectiveArea = area * (1+wastage/100);
+  const keys = Object.keys(myList);
+  if(!keys.length){ document.getElementById('orderText').textContent='Add products to your list to generate an order summary.'; return; }
+  const d = new Date(); const ds = d.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
+  let lines = [`EPOXY BROS — MATERIAL ORDER\n${ds}${area?'\nArea: '+area+'m²'+(wastage?' (+'+wastage+'% wastage = '+effectiveArea.toFixed(0)+'m² effective)':''):''}\n${'─'.repeat(40)}`];
+  let totalEx=0;
+  const bySup={};
+  keys.forEach(id=>{
+    const item=myList[id];
+    const sup=item.supplier||'Other';
+    if(!bySup[sup]) bySup[sup]=[];
+    const units = item.cov>0&&effectiveArea>0 ? Math.ceil(effectiveArea/item.cov) : item.qty||1;
+    const lineCost = (item.price||0)*units;
+    totalEx+=lineCost;
+    bySup[sup].push({...item,units,lineCost});
+  });
+  Object.entries(bySup).forEach(([sup,items])=>{
+    lines.push(`\n${sup.toUpperCase()}`);
+    items.forEach(item=>{
+      const codeStr = item.code?` [${item.code}]`:'';
+      const qtyStr  = `${item.units} × ${item.unit||'unit'}`;
+      const costStr = item.lineCost>0?` — $${item.lineCost.toFixed(2)}`:'';
+      lines.push(`  • ${item.name}${codeStr}\n    ${qtyStr}${costStr}`);
+    });
+  });
+  const markedUp = totalEx*(1+markup/100);
+  const gst = markedUp*0.1;
+  lines.push(`\n${'─'.repeat(40)}\nEx GST:  $${markedUp.toFixed(2)}\nGST:     $${gst.toFixed(2)}\nINC GST: $${(markedUp+gst).toFixed(2)}`);
+  if(area>0) lines.push(`Per m²:  $${(markedUp/area).toFixed(2)}`);
+  document.getElementById('orderText').textContent = lines.join('\n');
+}
+
+async function copyOrder(){
+  const text = document.getElementById('orderText').textContent||document.getElementById('orderText').innerText;
+  try{
+    await navigator.clipboard.writeText(text);
+    const btn=document.getElementById('copyBtn');
+    btn.textContent='✅ Copied!'; btn.className='copy-btn done';
+    setTimeout(()=>{ btn.textContent='📋 Copy Order to Clipboard'; btn.className='copy-btn'; },2200);
+  } catch(e){ showToast('Copy failed — select text manually.'); }
+}
+
+// ── ADD CUSTOM PRODUCT ──
+function addCustomProduct(){
+  const name = document.getElementById('newName').value.trim();
+  if(!name){ showToast('Product name is required.'); return; }
+  const id = 'custom_'+Date.now();
+  const sup = document.getElementById('newSupplier').value.trim()||'Custom';
+  const newProd = {
+    id, name, supplier:sup, supplierId:'custom',
+    desc: document.getElementById('newDesc').value.trim(),
+    code: document.getElementById('newCode').value.trim(),
+    unit: document.getElementById('newUnit').value.trim()||'unit',
+    price: parseFloat(document.getElementById('newPrice').value)||0,
+    cov:  parseFloat(document.getElementById('newCoverage').value)||0,
+  };
+  // add to a custom section or create one
+  let cust = SECTIONS.find(s=>s.id==='custom');
+  if(!cust){
+    cust = {id:'custom',cls:'custom',icon:'⚙️',name:'Custom Products',tag:'User-added products',subcats:[{label:'My Products',products:[]}]};
+    SECTIONS.push(cust);
+  }
+  cust.subcats[0].products.push(newProd);
+  saveData();
+  // clear form
+  ['newName','newSupplier','newCode','newUnit','newDesc'].forEach(id=>document.getElementById(id).value='');
+  ['newPrice','newCoverage'].forEach(id=>document.getElementById(id).value='');
+  showToast('Product added ✓');
+  renderBrowser();
+}
+
+// ── EDIT MODAL ──
+function openEdit(id){
+  const p = ALL[id];
+  if(!p) return;
+  document.getElementById('editId').value = id;
+  document.getElementById('modalTitle').textContent = 'Edit: '+p.name;
+  document.getElementById('editName').value = p.name||'';
+  document.getElementById('editSupplier').value = p.supplier||'';
+  document.getElementById('editCode').value = p.code||'';
+  document.getElementById('editUnit').value = p.unit||'';
+  document.getElementById('editPrice').value = p.price||'';
+  document.getElementById('editCov').value = p.cov||'';
+  document.getElementById('editDesc').value = p.desc||'';
+  document.getElementById('editModal').classList.add('open');
+}
+function closeModal(){ document.getElementById('editModal').classList.remove('open'); }
+function saveEdit(){
+  const id = document.getElementById('editId').value;
+  SECTIONS.forEach(s=>s.subcats.forEach(sc=>sc.products.forEach(p=>{
+    if(p.id===id){
+      p.name  = document.getElementById('editName').value.trim()||p.name;
+      p.supplier = document.getElementById('editSupplier').value.trim()||p.supplier;
+      p.code  = document.getElementById('editCode').value.trim();
+      p.unit  = document.getElementById('editUnit').value.trim()||p.unit;
+      p.price = parseFloat(document.getElementById('editPrice').value)||0;
+      p.cov   = parseFloat(document.getElementById('editCov').value)||0;
+      p.desc  = document.getElementById('editDesc').value.trim();
+    }
+  })));
+  saveData(); closeModal(); render(); showToast('Saved ✓');
+}
+function deleteProduct(){
+  const id = document.getElementById('editId').value;
+  if(!confirm('Delete this product? It will be removed from all supplier lists.')) return;
+  SECTIONS.forEach(s=>s.subcats.forEach(sc=>{
+    sc.products = sc.products.filter(p=>p.id!==id);
+  }));
+  // clean empty subcats
+  SECTIONS.forEach(s=>{ s.subcats = s.subcats.filter(sc=>sc.products.length>0); });
+  SECTIONS = SECTIONS.filter(s=>s.subcats.length>0);
+  delete myList[id];
+  saveData(); closeModal(); render(); showToast('Product deleted.');
+}
+
+// close modal on overlay click
+document.getElementById('editModal').addEventListener('click',function(e){ if(e.target===this) closeModal(); });
+
+// ── TOAST ──
+function showToast(msg, dur=2500){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+// ── RESET BUTTON (editor only) ──
+// Hold Shift+R to reset to defaults
+document.addEventListener('keydown',e=>{
+  if(e.shiftKey&&e.key==='R'&&role==='editor'){
+    if(confirm('Reset ALL products to factory defaults? This will erase any edits.')){
+      localStorage.removeItem('eb_sections');
+      SECTIONS=JSON.parse(JSON.stringify(DEFAULT_SECTIONS));
+      ALL=buildLookup(); myList={}; render(); showToast('Reset to defaults.');
+    }
+  }
+});
+
+// ── INIT ──
+// Show pin on load
+document.getElementById('pinInput').focus();
+</script>
+</body>
+</html>
