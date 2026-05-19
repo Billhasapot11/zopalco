@@ -399,10 +399,10 @@ const DEFAULT_SECTIONS = [
     id:'sika', cls:'sika', icon:'🟢', name:'Sika Australia', tag:'BR Construction Supplies — Torrensville SA',
     subcats:[
       { label:'Primers & Moisture Barriers', products:[
-        {id:'sf94a',  name:'Sikafloor®-94 Part A',          desc:'2-part EP primer — Part A',                      code:'875943', price:0,      unit:'20L',      cov:0},
-        {id:'sf94b',  name:'Sikafloor®-94 Part B',          desc:'2-part EP primer — Part B',                      code:'877510', price:0,      unit:'4L',       cov:0},
-        {id:'sf161a', name:'Sikafloor®-161 Part A',         desc:'Epoxy primer & DPM — Part A',                    code:'879638', price:0,      unit:'20L',      cov:0},
-        {id:'sf161b', name:'Sikafloor®-161 Part B / 160',   desc:'Epoxy primer hardener — Part B',                 code:'880020', price:0,      unit:'4L',       cov:0},
+        {id:'sf94a',  name:'Sikafloor®-94 Part A',          desc:'2-part EP primer — Part A',                      code:'875943', price:344.8,      unit:'20L pack',      cov:160.0},
+        {id:'sf94b',  name:'Sikafloor®-94 Part B',          desc:'2-part EP primer — Part B',                      code:'877510', price:367.0,      unit:'20L pack',       cov:300.0},
+        {id:'sf161a', name:'Sikafloor®-161 Part A',         desc:'Epoxy primer & DPM — Part A',                    code:'879638', price:221.0,      unit:'13.09kg pack',      cov:32.0},
+        {id:'sf161b', name:'Sikafloor®-160/161/264 Part B',   desc:'Hardener for SF-160, SF-161 & SF-264',                 code:'880020', price:93.0,      unit:'4kg pack',       cov:32.0},
         {id:'sf160',  name:'Sikafloor®-160',                desc:'2-part epoxy primer & levelling mortar',          code:'',       price:0,      unit:'kit',      cov:5},
         {id:'sf158',  name:'Sikafloor®-158 W Fast Barrier', desc:'Rapid-drying hydrostatic moisture barrier',       code:'',       price:0,      unit:'kit',      cov:6},
       ]},
@@ -413,7 +413,7 @@ const DEFAULT_SECTIONS = [
         {id:'sf169',  name:'Sikafloor®-169',                desc:'Very low yellowing transparent epoxy',            code:'',       price:0,      unit:'kit',      cov:6},
       ]},
       { label:'Pigments & Additives', products:[
-        {id:'piggy',  name:'Epoxy Pigment Light Grey N35',  desc:'2.3kg — suits Sikafloor 264',                    code:'EP-19338',price:23.72, unit:'2.3kg pk', cov:13.99},
+        {id:'piggy',  name:'Epoxy Pigment Light Grey N35',  desc:'2.3kg — suits Sikafloor 264',                    code:'EP-19338',price:23.72, unit:'2.3kg pack', cov:13.95},
       ]},
       { label:'Polyurethane & Polyaspartic Top Coats', products:[
         {id:'sf359au',name:'Sikafloor®-359 AU',             desc:'PU UV stable pigmented & clear coating',          code:'',       price:0,      unit:'kit',      cov:6},
@@ -694,8 +694,15 @@ function buildOrder(){
   const {area, wastage, markup, effectiveArea} = getCalcParams();
   const keys = Object.keys(myList);
   if(!keys.length){ document.getElementById('orderText').textContent='Add products to your list to generate an order summary.'; return; }
-  const d = new Date(); const ds = d.toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
-  let lines = [`EPOXY BROS — MATERIAL ORDER\n${ds}${area?'\nArea: '+area+'m²'+(wastage?' (+'+wastage+'% wastage = '+effectiveArea.toFixed(0)+'m² effective)':''):''}\n${'─'.repeat(40)}`];
+  const d = new Date();
+  const ds = d.toLocaleDateString('en-AU',{day:'2-digit',month:'2-digit',year:'numeric'});
+  const bar = '\u254b'.repeat(36);
+  let lines = [];
+  lines.push('EPOXY BROS \u2014 MATERIAL ORDER');
+  lines.push('Date: '+ds);
+  if(area) lines.push('Job Area: '+area.toLocaleString()+'m\u00b2'+(wastage?' (incl. '+wastage+'% wastage = '+Math.round(effectiveArea)+'m\u00b2 effective)':''));
+  lines.push(bar);
+
   let totalEx=0;
   const bySup={};
   keys.forEach(id=>{
@@ -707,19 +714,32 @@ function buildOrder(){
     totalEx+=lineCost;
     bySup[sup].push({...item,units,lineCost});
   });
+
   Object.entries(bySup).forEach(([sup,items])=>{
-    lines.push(`\n${sup.toUpperCase()}`);
+    lines.push('');
+    lines.push('\u25b8 '+sup.toUpperCase());
     items.forEach(item=>{
-      const codeStr = item.code?` [${item.code}]`:'';
-      const qtyStr  = `${item.units} × ${item.unit||'unit'}`;
-      const costStr = item.lineCost>0?` — $${item.lineCost.toFixed(2)}`:'';
-      lines.push(`  • ${item.name}${codeStr}\n    ${qtyStr}${costStr}`);
+      lines.push('  '+item.name);
+      if(item.code) lines.push('    Code: '+item.code);
+      lines.push('    Qty:  '+item.units+' \u00d7 '+(item.unit||'unit'));
+      if(item.lineCost>0) lines.push('    Est:  $'+item.lineCost.toFixed(2)+' ex GST');
+      else lines.push('    Est:  Price TBC');
     });
   });
+
   const markedUp = totalEx*(1+markup/100);
   const gst = markedUp*0.1;
-  lines.push(`\n${'─'.repeat(40)}\nEx GST:  $${markedUp.toFixed(2)}\nGST:     $${gst.toFixed(2)}\nINC GST: $${(markedUp+gst).toFixed(2)}`);
-  if(area>0) lines.push(`Per m²:  $${(markedUp/area).toFixed(2)}`);
+  const inc = markedUp+gst;
+  lines.push('');
+  lines.push(bar);
+  lines.push('Subtotal ex GST:  $'+markedUp.toFixed(2));
+  lines.push('GST (10%):        $'+gst.toFixed(2));
+  lines.push('Total inc GST:    $'+inc.toFixed(2));
+  if(area>0) lines.push('Per m\u00b2:           $'+(markedUp/area).toFixed(2)+' ex GST');
+  lines.push('');
+  lines.push('Please confirm pricing matches current stock.');
+  lines.push('Epoxy Bros \u00b7 nick.epoxybros@gmail.com \u00b7 0433 160 585');
+
   document.getElementById('orderText').textContent = lines.join('\n');
 }
 
