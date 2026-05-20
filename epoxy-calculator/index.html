@@ -288,12 +288,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
     <span class="unit-tag">m²</span>
   </div>
   <div class="ctrl-divider"></div>
-  <div class="ctrl-group">
-    <span class="ctrl-label">Wastage</span>
-    <input type="number" class="small-input" id="wastageInput" value="0" min="0" max="50" step="1" oninput="recalcAndRender()">
-    <span class="unit-tag">%</span>
-  </div>
-  <div class="ctrl-divider"></div>
+
   <div class="ctrl-group">
     <span class="ctrl-label">Markup</span>
     <input type="number" class="small-input" id="markupInput" value="0" min="0" max="200" step="1" oninput="recalcAndRender()">
@@ -714,7 +709,7 @@ function adjustQty(id, delta){
 function adjustKits(id, delta){
   if(!myList[id]) return;
   const item = myList[id];
-  const effectiveArea = parseFloat(document.getElementById('areaInput')?.value||0) * (item.wastage||1);
+  const effectiveArea = parseFloat(document.getElementById('areaInput')?.value||0);
   // Seed manualKits from auto-calc if not yet set
   if(item.manualKits === undefined){
     item.manualKits = getUnitsNeeded(item, effectiveArea);
@@ -729,7 +724,7 @@ function clearList(){ myList={}; renderBrowser(); renderList(); recalc(); }
 // ── SHARED AREA/WASTAGE/MARKUP HELPERS ──
 function getCalcParams(){
   const area = parseFloat(document.getElementById('areaInput').value)||0;
-  const wastage = parseFloat(document.getElementById('wastageInput').value)||0;
+  const wastage = 0;
   const markup = parseFloat(document.getElementById('markupInput').value)||0;
   const effectiveArea = area * (1 + wastage/100);
   return {area, wastage, markup, effectiveArea};
