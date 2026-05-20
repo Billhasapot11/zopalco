@@ -647,7 +647,7 @@ function renderList(){
           <button class="qty-btn" style="width:26px;height:26px;font-size:14px" onclick="adjustKits('${id}',-1)">−</button>
           <span style="font-size:17px;font-weight:900;color:var(--orange);min-width:28px;text-align:center">${kitsDisplay}</span>
           <button class="qty-btn" style="width:26px;height:26px;font-size:14px" onclick="adjustKits('${id}',1)">+</button>
-          ${isOverride ? '<button onclick="resetKits('${id}')" style="font-size:9px;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:2px 5px;cursor:pointer">↺</button>' : ''}
+          ${isOverride ? `<button onclick="resetKits('${id}')" style="font-size:9px;background:none;border:1px solid var(--border2);border-radius:4px;color:var(--text3);padding:2px 5px;cursor:pointer">↺</button>` : ''}
         </div>
       </div>`;
     if(hasCov && areaSet){
