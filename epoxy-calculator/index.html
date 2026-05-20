@@ -252,18 +252,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
 <body>
 
 <!-- PIN GATE -->
-<div class="pin-overlay" id="pinOverlay">
-  <div class="pin-box">
-    <div class="pin-icon">🔒</div>
-    <div class="pin-title">Epoxy Bros Calculator</div>
-    <div class="pin-sub">Enter your team PIN to continue.<br>Editors use the 4-digit editor PIN to unlock editing.</div>
-    <input type="password" inputmode="numeric" maxlength="4" class="pin-input" id="pinInput" placeholder="····" oninput="checkPin()" onkeydown="if(event.key==='Enter')checkPin(true)">
-    <div class="pin-err" id="pinErr"></div>
-    <div class="pin-btns" style="margin-top:14px">
-      <button class="pin-btn pin-btn-ok" onclick="checkPin(true)">Enter</button>
-    </div>
-  </div>
-</div>
+
 
 <!-- HEADER -->
 <div class="header">
@@ -276,7 +265,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-seri
   </div>
   <div class="header-right">
     <span class="pin-badge" id="roleBadge" style="display:none"></span>
-    <button class="edit-btn" id="editBtn" onclick="toggleEdit()" style="display:none">✏️ Edit Products</button>
+    <button class="edit-btn" id="editBtn" onclick="toggleEdit()">✏️ Edit Products</button>
   </div>
 </div>
 
@@ -519,13 +508,7 @@ function checkPin(submit=false){
     document.getElementById('pinInput').value='';
   }
 }
-function unlockApp(){
-  document.getElementById('pinOverlay').style.display='none';
-  const rb = document.getElementById('roleBadge');
-  if(role==='editor'){ rb.textContent='🔓 Editor'; rb.className='pin-badge editor'; rb.style.display=''; document.getElementById('editBtn').style.display=''; }
-  else { rb.textContent='👷 Team'; rb.className='pin-badge team'; rb.style.display=''; }
-  render();
-}
+function unlockApp(){ render(); }
 
 // ── TOGGLE EDIT MODE ──
 function toggleEdit(){
@@ -931,7 +914,7 @@ document.addEventListener('keydown',e=>{
 
 // ── INIT ──
 // Show pin on load
-document.getElementById('pinInput').focus();
+
 
 function toggleSendPanel(){
   const p = document.getElementById('sendPanel');
@@ -966,6 +949,7 @@ function resetKits(id){
   delete myList[id].manualKits;
   renderList(); recalc();
 }
+render();
 </script>
 </body>
 </html>
